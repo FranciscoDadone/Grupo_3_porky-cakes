@@ -24,6 +24,7 @@ public class NotaRepository {
     }
 
     public void create(Nota nota) {
+        nota.setId(notas.size() + 1);
         notas.add(nota);
     }
 

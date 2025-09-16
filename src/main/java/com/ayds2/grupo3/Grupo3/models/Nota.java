@@ -28,4 +28,8 @@ public class Nota {
     public int getFechaCreacion() {
         return fechaCreacion;
     }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 }

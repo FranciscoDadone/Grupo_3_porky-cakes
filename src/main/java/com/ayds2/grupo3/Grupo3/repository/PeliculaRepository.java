@@ -31,6 +31,7 @@ public class PeliculaRepository {
     }
 
     public void create(Pelicula pelicula) {
+        pelicula.setId(peliculas.size() + 1);
         peliculas.add(pelicula);
     }
 

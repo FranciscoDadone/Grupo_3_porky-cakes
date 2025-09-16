@@ -28,4 +28,8 @@ public class Libro {
     public int getAnioPublicacion() {
         return anioPublicacion;
     }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 }

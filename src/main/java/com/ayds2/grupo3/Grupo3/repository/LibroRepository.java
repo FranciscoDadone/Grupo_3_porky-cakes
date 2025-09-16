@@ -24,6 +24,7 @@ public class LibroRepository {
     }
 
     public void create(Libro libro) {
+        libro.setId(libros.size() + 1);
         libros.add(libro);
     }
 

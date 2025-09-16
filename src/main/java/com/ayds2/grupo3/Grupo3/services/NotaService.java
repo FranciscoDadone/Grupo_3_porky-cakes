@@ -20,10 +20,6 @@ public class NotaService {
     }
 
     public void crearNota(Nota nota) {
-        Nota n = notaRepository.getNota(nota.getId());
-        if (n != null) {
-            throw new IllegalArgumentException("La nota con ID " + nota.getId() + " ya existe.");
-        }
         notaRepository.create(nota);
     }
 
@@ -40,6 +36,7 @@ public class NotaService {
         if (notaExistente == null) {
             throw new IllegalArgumentException("La nota con ID " + id + " no existe.");
         }
+        notaActualizada.setId(id);
         notaRepository.update(notaActualizada);
     }
 }
