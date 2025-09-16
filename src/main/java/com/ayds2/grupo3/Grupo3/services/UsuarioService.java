@@ -38,7 +38,7 @@ public class UsuarioService {
             if (response.statusCode() == 200) {
                 Map<String, Object> jsonMap = objectMapper.readValue(response.body(), new TypeReference<Map<String, Object>>() {});
 
-                Usuario usuario = new Usuario((int)jsonMap.get("id"), (String)jsonMap.get("name"), (String)jsonMap.get("email"), (String)jsonMap.get("image"));
+                Usuario usuario = new Usuario((int)jsonMap.get("id"), (String)jsonMap.get("firstName"), (String)jsonMap.get("email"), (String)jsonMap.get("image"));
                 
 
                 return usuario;

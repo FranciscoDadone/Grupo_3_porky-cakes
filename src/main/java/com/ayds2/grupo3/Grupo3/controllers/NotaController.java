@@ -1,84 +1,86 @@
 package com.ayds2.grupo3.Grupo3.controllers;
 
-import org.springframework.stereotype.Controller;
+import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.ResponseBody;
-
+import org.springframework.web.bind.annotation.RestController;
 import com.ayds2.grupo3.Grupo3.models.Nota;
 import com.ayds2.grupo3.Grupo3.services.NotaService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 
-
-
-
 @AllArgsConstructor
-@Controller
+@RestController
 public class NotaController {
 
     private NotaService notaService;
     private ObjectMapper objectMapper;
 
     @GetMapping("/notas")
-    @ResponseBody
-    public String getNotas() {
+    public ResponseEntity<?> getNotas() {
         try {
-            return objectMapper.writeValueAsString(notaService.obtenerNotas());
-        } catch (JsonProcessingException e) {
-            return "{\"error\": \"Error al convertir a JSON\"}";
+            return ResponseEntity.ok(notaService.obtenerNotas());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error al obtener las notas"));
         }
     }
 
     @PostMapping("/notas")
-    @ResponseBody
-    public String crearNota(@RequestBody String notaJson) {
+    public ResponseEntity<?> crearNota(@RequestBody String notaJson) {
         try {
             Nota nota = objectMapper.readValue(notaJson, Nota.class);
             notaService.crearNota(nota);
-            return "{\"status\": \"Nota creada exitosamente\"}";
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of("status", "Nota creada exitosamente"));
         } catch (IllegalArgumentException e) {
-            return "{\"error\": \"" + e.getMessage() + "\"}";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         } catch (JsonProcessingException e) {
-            return "{\"error\": \"Error al procesar el JSON\"}";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Error al procesar el JSON"));
         }   
     }
 
     @PutMapping("/notas/{id}")
-    @ResponseBody
-    public String actualizarNota(@PathVariable int id, @RequestBody String notaJson) {
+    public ResponseEntity<?> actualizarNota(@PathVariable int id, @RequestBody String notaJson) {
         try {
             Nota nota = objectMapper.readValue(notaJson, Nota.class);
             notaService.actualizarNota(id, nota);
-            return "{\"status\": \"Nota actualizada exitosamente\"}";
+            return ResponseEntity.ok(Map.of("status", "Nota actualizada exitosamente"));
         } catch (NumberFormatException e) {
-            return "{\"error\": \"ID inválido\"}";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "ID inválido"));
         } catch (IllegalArgumentException e) {
-            return "{\"error\": \"" + e.getMessage() + "\"}";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         } catch (JsonProcessingException e) {
-            return "{\"error\": \"Error al procesar el JSON\"}";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Error al procesar el JSON"));
         }
     }
 
     @DeleteMapping("/notas/{id}")
-    @ResponseBody
-    public String eliminarNota(@PathVariable int id) {
+    public ResponseEntity<?> eliminarNota(@PathVariable int id) {
         try {
             Nota nota = notaService.obtenerNotaPorId(id);
             if (nota != null) {
                 notaService.eliminarNota(nota);
-                return "{\"status\": \"Nota eliminada exitosamente\"}";
+                return ResponseEntity.ok(Map.of("status", "Nota eliminada exitosamente"));
             } else {
-                return "{\"error\": \"Nota no encontrada\"}";
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Nota no encontrada"));
             }
         } catch (Exception e) {
-            return "{\"error\": \"Error al eliminar la nota\"}";
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error al eliminar la nota"));
         }
     }
 }

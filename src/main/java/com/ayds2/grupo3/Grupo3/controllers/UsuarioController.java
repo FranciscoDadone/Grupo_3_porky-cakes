@@ -1,31 +1,32 @@
 package com.ayds2.grupo3.Grupo3.controllers;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import java.util.Map;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 import com.ayds2.grupo3.Grupo3.models.Usuario;
 import com.ayds2.grupo3.Grupo3.services.UsuarioService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.AllArgsConstructor;
 
-
 @AllArgsConstructor
-@Controller
+@RestController
 public class UsuarioController {
 
     private UsuarioService usuarioService;
-    private ObjectMapper objectMapper;
 
     @GetMapping("/usuarioRandom")
-    @ResponseBody
-    public String getUsuarioRandom() {
-        Usuario usuario = usuarioService.getUsuarioRandom();
+    public ResponseEntity<?> getUsuarioRandom() {
         try {
-            return objectMapper.writeValueAsString(usuario);
+            Usuario usuario = usuarioService.getUsuarioRandom();
+            return ResponseEntity.ok(usuario);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return "{\"error\": \"Error al convertir a JSON\"}";
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error interno del servidor"));
         }
     }
     

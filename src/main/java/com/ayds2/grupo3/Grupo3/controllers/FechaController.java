@@ -1,38 +1,39 @@
 package com.ayds2.grupo3.Grupo3.controllers;
 
 import java.util.HashMap;
+import java.util.Map;
 
-import org.springframework.stereotype.Controller;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-
+import org.springframework.web.bind.annotation.RestController;
 import com.ayds2.grupo3.Grupo3.services.HoraService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.AllArgsConstructor;
 
 
 @AllArgsConstructor
-@Controller
+@RestController
 public class FechaController {
 
     private HoraService horaService;
-    private ObjectMapper objectMapper;
 
     @GetMapping("/hora")
-    @ResponseBody
-    public String getHora(@RequestParam String fecha, @RequestParam String origen, @RequestParam String destino) {
-        String horaCalculada = horaService.calcularHora(fecha, origen, destino);
-
-        HashMap<String, String> response = new HashMap<>();
-        response.put("origen", '"' + origen + '"');
-        response.put("destino", '"' + horaCalculada + '"');
-
+    public ResponseEntity<?> getHora(@RequestParam String fecha, @RequestParam String origen, @RequestParam String destino) {
         try {
-            return objectMapper.writeValueAsString(response);
+            String horaCalculada = horaService.calcularHora(fecha, origen, destino);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("origen", fecha);
+            response.put("destino", horaCalculada);
+
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return "{\"error\": \"Error al convertir a JSON\"}";
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error interno del servidor"));
         }
     }
     
