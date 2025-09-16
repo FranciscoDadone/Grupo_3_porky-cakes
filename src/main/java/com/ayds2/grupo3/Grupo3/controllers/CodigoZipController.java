@@ -25,12 +25,9 @@ public class CodigoZipController {
         try {
             CodigoZip codigoZip = codigoZipService.codigoZip(codigoPais, codigoPostal);
             return ResponseEntity.ok(codigoZip);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error interno del servidor"));
+                    .body(Map.of("error", "Error interno del servidor: " + e.getMessage()));
         }
     }
     

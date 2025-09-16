@@ -14,16 +14,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 
 @AllArgsConstructor
 @RestController
+@RequestMapping("/notas")
 public class NotaController {
 
     private NotaService notaService;
     private ObjectMapper objectMapper;
 
-    @GetMapping("/notas")
+    @GetMapping
     public ResponseEntity<?> getNotas() {
         try {
             return ResponseEntity.ok(notaService.obtenerNotas());
@@ -33,31 +35,25 @@ public class NotaController {
         }
     }
 
-    @PostMapping("/notas")
+    @PostMapping
     public ResponseEntity<?> crearNota(@RequestBody String notaJson) {
         try {
             Nota nota = objectMapper.readValue(notaJson, Nota.class);
             notaService.crearNota(nota);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of("status", "Nota creada exitosamente"));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
         } catch (JsonProcessingException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Error al procesar el JSON"));
         }   
     }
 
-    @PutMapping("/notas/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<?> actualizarNota(@PathVariable int id, @RequestBody String notaJson) {
         try {
             Nota nota = objectMapper.readValue(notaJson, Nota.class);
             notaService.actualizarNota(id, nota);
             return ResponseEntity.ok(Map.of("status", "Nota actualizada exitosamente"));
-        } catch (NumberFormatException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "ID inválido"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
@@ -67,20 +63,9 @@ public class NotaController {
         }
     }
 
-    @DeleteMapping("/notas/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminarNota(@PathVariable int id) {
-        try {
-            Nota nota = notaService.obtenerNotaPorId(id);
-            if (nota != null) {
-                notaService.eliminarNota(nota);
-                return ResponseEntity.ok(Map.of("status", "Nota eliminada exitosamente"));
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", "Nota no encontrada"));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error al eliminar la nota"));
-        }
+        notaService.eliminarNotaPorId(id);
+        return ResponseEntity.ok(Map.of("status", "Nota eliminada exitosamente"));
     }
 }

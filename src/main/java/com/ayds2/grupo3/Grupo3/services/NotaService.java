@@ -23,8 +23,11 @@ public class NotaService {
         notaRepository.create(nota);
     }
 
-    public void eliminarNota(Nota nota) {
-        notaRepository.delete(nota);
+    public void eliminarNotaPorId(int id) {
+        Nota nota = notaRepository.getNota(id);
+        if (nota != null) {
+            notaRepository.delete(nota);
+        }
     }
 
     public Nota obtenerNotaPorId(int id) {

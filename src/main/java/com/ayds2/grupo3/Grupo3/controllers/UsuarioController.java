@@ -1,5 +1,6 @@
 package com.ayds2.grupo3.Grupo3.controllers;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -18,16 +19,14 @@ public class UsuarioController {
 
     @GetMapping("/usuarioRandom")
     public ResponseEntity<?> getUsuarioRandom() {
+        Usuario usuario;
         try {
-            Usuario usuario = usuarioService.getUsuarioRandom();
-            return ResponseEntity.ok(usuario);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
+            usuario = usuarioService.getUsuarioRandom();
+        } catch (IOException | InterruptedException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error interno del servidor"));
+                    .body(Map.of("error", "Error al obtener el usuario: " + e.getMessage()));
         }
+        return ResponseEntity.ok(usuario);
     }
     
 }

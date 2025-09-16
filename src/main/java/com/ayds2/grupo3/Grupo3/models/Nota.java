@@ -1,5 +1,8 @@
 package com.ayds2.grupo3.Grupo3.models;
 
+import lombok.Data;
+
+@Data
 public class Nota {
     private int id;
     private String titulo;
@@ -11,25 +14,5 @@ public class Nota {
         this.titulo = titulo;
         this.contenido = contenido;
         this.fechaCreacion = fechaCreacion;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public String getTitulo() {
-        return titulo;
-    }
-
-    public String getContenido() {
-        return contenido;
-    }
-
-    public int getFechaCreacion() {
-        return fechaCreacion;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 }
