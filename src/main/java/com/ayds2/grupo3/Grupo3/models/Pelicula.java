@@ -1,5 +1,8 @@
 package com.ayds2.grupo3.Grupo3.models;
 
+import lombok.Data;
+
+@Data
 public class Pelicula {
     private int id;
     private String titulo;
@@ -13,29 +16,5 @@ public class Pelicula {
         this.director = director;
         this.anio = anio;
         this.genero = genero;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public String getTitulo() {
-        return titulo;
-    }
-
-    public String getDirector() {
-        return director;
-    }
-
-    public int getAnio() {
-        return anio;
-    }
-
-    public String getGenero() {
-        return genero;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 }
