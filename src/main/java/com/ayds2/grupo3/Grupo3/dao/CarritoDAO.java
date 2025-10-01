@@ -9,33 +9,56 @@ import com.ayds2.grupo3.Grupo3.util.Sql2oDAO;
 @Repository
 public class CarritoDAO {
 
-    public void agregarProducto(int idCarrito, int idProducto, int cantidad) {
-        String sql = "INSERT INTO productos_x_carrito (producto_id, carrito_id, cantidad) VALUES (:producto_id, :carrito_id, :cantidad);";
+    public void insertarProducto(int idCarrito, int idProducto, int cantidad) {
+        String sql = "INSERT INTO productos_x_carrito (productoId, carritoId, cantidad) VALUES (:productoId, :carritoId, :cantidad);";
         try (Connection con = Sql2oDAO.getSql2o().open()) {
             con.createQuery(sql)
-                    .addParameter("producto_id", idProducto)
-                    .addParameter("carrito_id", idCarrito)
+                    .addParameter("productoId", idProducto)
+                    .addParameter("carritoId", idCarrito)
                     .addParameter("cantidad", cantidad)
                     .executeUpdate();
         }
     }
 
+    public void actualizarCantidadProducto(int idCarrito, int idProducto, int cantidad) {
+        String sql = "UPDATE productos_x_carrito SET cantidad = :cantidad WHERE productoId = :productoId AND carritoId = :carritoId;";
+        try (Connection con = Sql2oDAO.getSql2o().open()) {
+            con.createQuery(sql)
+                    .addParameter("productoId", idProducto)
+                    .addParameter("carritoId", idCarrito)
+                    .addParameter("cantidad", cantidad)
+                    .executeUpdate();
+        }
+    }
+
+    public Integer cantidadDeProductoEnCarrito(int idCarrito, int idProducto) {
+        String sql = "SELECT cantidad FROM productos_x_carrito WHERE productoId = :productoId AND carritoId = :carritoId;";
+        try (Connection con = Sql2oDAO.getSql2o().open()) {
+            Integer cantidad = con.createQuery(sql)
+                    .addParameter("productoId", idProducto)
+                    .addParameter("carritoId", idCarrito)
+                    .executeAndFetchFirst(Integer.class);
+            return cantidad;
+        }
+    }
+
     public Carrito getCarritoCliente(int clienteId) {
-        String sql = "SELECT * FROM carritos WHERE cliente_id = :cliente_id AND comprado = 0;";
+        String sql = "SELECT * FROM carritos WHERE clienteId = :clienteId AND comprado = 0;";
         try (Connection con = Sql2oDAO.getSql2o().open()) {
             return con.createQuery(sql)
-                    .addParameter("cliente_id", clienteId)
+                    .addParameter("clienteId", clienteId)
                     .executeAndFetchFirst(Carrito.class);
         }
     }
 
     public Carrito crearCarrito(int clienteId) {
-        String sql = "INSERT INTO carritos (cliente_id, comprado) VALUES (:cliente_id, 0);";
+        String sql = "INSERT INTO carritos (clienteId, comprado) VALUES (:clienteId, 0);";
         try (Connection con = Sql2oDAO.getSql2o().open()) {
-            int id = (int) con.createQuery(sql, true)
-                    .addParameter("cliente_id", clienteId)
+            Object key = con.createQuery(sql, true)
+                    .addParameter("clienteId", clienteId)
                     .executeUpdate()
                     .getKey();
+            int id = ((Number) key).intValue();
             return new Carrito(id, clienteId, false);
         }
     }
