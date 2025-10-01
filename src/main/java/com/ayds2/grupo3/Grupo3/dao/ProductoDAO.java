@@ -7,11 +7,11 @@ import com.ayds2.grupo3.Grupo3.util.Sql2oDAO;
 
 @Repository
 public class ProductoDAO {
-    public Producto getPorId(int id) {
+    public Producto getPorId(int productoId) {
         String sql = "Select * from productos where id = :id;";
         try (Connection con = Sql2oDAO.getSql2o().open()) {
             return con.createQuery(sql)
-                    .addParameter("id", id)
+                    .addParameter("id", productoId)
                     .executeAndFetchFirst(Producto.class);
         }
     }

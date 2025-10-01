@@ -7,11 +7,11 @@ import com.ayds2.grupo3.Grupo3.util.Sql2oDAO;
 
 @Repository
 public class ClienteDAO {
-    public Cliente getPorId(int id) {
+    public Cliente getPorId(int clienteId) {
         String sql = "SELECT * FROM clientes WHERE id = :id;";
         try (Connection con = Sql2oDAO.getSql2o().open()) {
             return con.createQuery(sql)
-                    .addParameter("id", id)
+                    .addParameter("id", clienteId)
                     .executeAndFetchFirst(Cliente.class);
         }
     }

@@ -21,15 +21,15 @@ public class CarritoService {
     private final ClienteDAO clienteDAO;
     private final ProductoDAO productoDAO;
 
-    public void agregarProducto(int id, int cantidad, int clienteId) {
+    public void agregarProducto(int productoId, int cantidad, int clienteId) {
         Cliente cliente = clienteDAO.getPorId(clienteId);
         if (cliente == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El cliente con ID " + clienteId + " no existe");
         }
 
-        Producto producto = productoDAO.getPorId(id);
+        Producto producto = productoDAO.getPorId(productoId);
         if (producto == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El producto con ID " + id + " no existe");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El producto con ID " + productoId + " no existe");
         }
 
         Carrito carrito = carritoDAO.getCarritoCliente(clienteId);
@@ -37,12 +37,12 @@ public class CarritoService {
             carrito = carritoDAO.crearCarrito(clienteId);
         }
 
-        Integer cantidadActual = carritoDAO.cantidadDeProductoEnCarrito(carrito.getId(), id);
+        Integer cantidadActual = carritoDAO.cantidadDeProductoEnCarrito(carrito.getId(), productoId);
 
         if (cantidadActual == null) {
-            carritoDAO.insertarProducto(carrito.getId(), id, cantidad);
+            carritoDAO.insertarProducto(carrito.getId(), productoId, cantidad);
         } else {
-            carritoDAO.actualizarCantidadProducto(carrito.getId(), id, cantidadActual + cantidad);
+            carritoDAO.actualizarCantidadProducto(carrito.getId(), productoId, cantidadActual + cantidad);
         }
 
     }

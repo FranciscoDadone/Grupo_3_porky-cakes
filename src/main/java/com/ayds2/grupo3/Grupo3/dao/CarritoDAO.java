@@ -2,7 +2,6 @@ package com.ayds2.grupo3.Grupo3.dao;
 
 import org.springframework.stereotype.Repository;
 import org.sql2o.Connection;
-
 import com.ayds2.grupo3.Grupo3.models.Carrito;
 import com.ayds2.grupo3.Grupo3.util.Sql2oDAO;
 
