@@ -1,5 +1,6 @@
 package com.ayds2.grupo3.Grupo3.dao;
 
+import java.sql.Timestamp;
 import org.springframework.stereotype.Repository;
 import org.sql2o.Connection;
 import com.ayds2.grupo3.Grupo3.models.Carrito;
@@ -51,14 +52,16 @@ public class CarritoDAO {
     }
 
     public Carrito crearCarrito(int clienteId) {
-        String sql = "INSERT INTO carritos (clienteId, comprado) VALUES (:clienteId, 0);";
+        String sql = "INSERT INTO carritos (clienteId, comprado, timestamp) VALUES (:clienteId, 0, :timestamp);";
         try (Connection con = Sql2oDAO.getSql2o().open()) {
+            Timestamp now = new Timestamp(System.currentTimeMillis());
             Object key = con.createQuery(sql, true)
                     .addParameter("clienteId", clienteId)
+                    .addParameter("timestamp", now)
                     .executeUpdate()
                     .getKey();
             int id = ((Number) key).intValue();
-            return new Carrito(id, clienteId, false);
+            return new Carrito(id, clienteId, false, now);
         }
     }
 }
