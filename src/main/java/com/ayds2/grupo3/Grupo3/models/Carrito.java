@@ -9,6 +9,5 @@ import lombok.Data;
 public class Carrito {
     private int id;
     private int clienteId;
-    private boolean comprado;
-    private Timestamp timestamp;
+    private Timestamp fechaCompra;
 }
