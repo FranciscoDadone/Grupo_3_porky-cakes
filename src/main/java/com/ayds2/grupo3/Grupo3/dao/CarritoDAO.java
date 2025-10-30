@@ -50,6 +50,15 @@ public class CarritoDAO {
         }
     }
 
+    public Carrito getCarritoPorId(int carritoId) {
+        String sql = "SELECT * FROM carritos WHERE id = :carritoId;";
+        try (Connection con = Sql2oDAO.getSql2o().open()) {
+            return con.createQuery(sql)
+                    .addParameter("carritoId", carritoId)
+                    .executeAndFetchFirst(Carrito.class);
+        }
+    }
+
     public Carrito crearCarrito(int clienteId) {
         String sql = "INSERT INTO carritos (clienteId, fechaCompra) VALUES (:clienteId, NULL);";
         try (Connection con = Sql2oDAO.getSql2o().open()) {

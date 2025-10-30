@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import com.ayds2.grupo3.Grupo3.dao.CarritoDAO;
 import com.ayds2.grupo3.Grupo3.dao.ClienteDAO;
 import com.ayds2.grupo3.Grupo3.dao.ProductoDAO;
+import com.ayds2.grupo3.Grupo3.dto.ComprarCarritoDto;
 import com.ayds2.grupo3.Grupo3.models.Carrito;
 import com.ayds2.grupo3.Grupo3.models.Cliente;
 import com.ayds2.grupo3.Grupo3.models.Producto;
@@ -42,6 +43,15 @@ public class CarritoService {
         } else {
             carritoDAO.actualizarCantidadProducto(carrito.getId(), productoId, cantidadActual + cantidad);
         }
+    }
 
+    public void comprarCarrito(ComprarCarritoDto comprarCarritoDto) {
+        Carrito carrito = carritoDAO.getCarritoPorId(comprarCarritoDto.getCarritoId());
+        if (carrito == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El carrito con ID " + comprarCarritoDto.getCarritoId() + " no existe");
+        }
+
+
+        
     }
 }
