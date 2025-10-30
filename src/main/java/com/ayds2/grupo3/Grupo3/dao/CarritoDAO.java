@@ -3,6 +3,7 @@ package com.ayds2.grupo3.Grupo3.dao;
 import org.springframework.stereotype.Repository;
 import org.sql2o.Connection;
 import com.ayds2.grupo3.Grupo3.models.Carrito;
+import com.ayds2.grupo3.Grupo3.models.Producto;
 import com.ayds2.grupo3.Grupo3.util.Sql2oDAO;
 
 @Repository
@@ -68,6 +69,32 @@ public class CarritoDAO {
                     .getKey();
             int id = ((Number) key).intValue();
             return new Carrito(id, clienteId, null);
+        }
+    }
+
+    public Producto[] getProductosDelCarrito(int carritoId) {
+        String sql = "SELECT p.id, p.nombre, p.descripcion, p.precio, p.stock " +
+                     "FROM productos p " +
+                     "JOIN productos_x_carrito pc ON p.id = pc.productoId " +
+                     "WHERE pc.carritoId = :carritoId;";
+        try (Connection con = Sql2oDAO.getSql2o().open()) {
+            return con.createQuery(sql)
+                    .addParameter("carritoId", carritoId)
+                    .executeAndFetch(Producto.class)
+                    .toArray(new Producto[0]);
+        }
+    }
+
+    public double calcularTotalCarrito(int carritoId) {
+        String sql = "SELECT SUM(p.precio * pc.cantidad) AS total " +
+                     "FROM productos p " +
+                     "JOIN productos_x_carrito pc ON p.id = pc.productoId " +
+                     "WHERE pc.carritoId = :carritoId;";
+        try (Connection con = Sql2oDAO.getSql2o().open()) {
+            Double total = con.createQuery(sql)
+                    .addParameter("carritoId", carritoId)
+                    .executeAndFetchFirst(Double.class);
+            return total != null ? total : 0.0;
         }
     }
 }
