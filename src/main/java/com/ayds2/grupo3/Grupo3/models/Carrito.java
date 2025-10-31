@@ -10,4 +10,6 @@ public class Carrito {
     private int id;
     private int clienteId;
     private Timestamp fechaCompra;
+    private Integer envioId;
+    private String externalReferenceMp;
 }

@@ -31,6 +31,7 @@ public class CarritoService {
     private final CarritoDAO carritoDAO;
     private final ClienteDAO clienteDAO;
     private final ProductoDAO productoDAO;
+    private final EnvioService envioService;
 
     public void agregarProducto(int productoId, int cantidad, int clienteId) {
         Cliente cliente = clienteDAO.getPorId(clienteId);
@@ -58,11 +59,18 @@ public class CarritoService {
         }
     }
 
-    public void comprarCarrito(ComprarCarritoDto comprarCarritoDto) {
+    public String comprarCarrito(ComprarCarritoDto comprarCarritoDto) {
         Carrito carrito = carritoDAO.getCarritoPorId(comprarCarritoDto.getCarritoId());
         if (carrito == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "El carrito con ID " + comprarCarritoDto.getCarritoId() + " no existe");
+        }
+
+        if (comprarCarritoDto.getCodigoPostal() == null || comprarCarritoDto.getProvincia() == null ||
+                comprarCarritoDto.getLocalidad() == null || comprarCarritoDto.getDireccion() == null ||
+                comprarCarritoDto.getNumero() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Faltan datos de envío obligatorios");
         }
 
         Producto[] productosCarrito = carritoDAO.getProductosDelCarrito(carrito.getId());
@@ -75,21 +83,39 @@ public class CarritoService {
         double total = carritoDAO.calcularTotalCarrito(carrito.getId());
 
         PreferenceItemRequest itemRequest = PreferenceItemRequest.builder()
-                .id("1234")
-                .title("Compra de productos")
-                .description(descripcion)
+                .title(descripcion)
                 .quantity(1)
                 .currencyId("ARS")
                 .unitPrice(new BigDecimal(total))
                 .build();
-        List<PreferenceItemRequest> items = new ArrayList<>();
-        items.add(itemRequest);
+
+        String externalReference = "PORKYS-" + System.currentTimeMillis() + "-" + String.valueOf(carrito.getId());
+
         PreferenceRequest preferenceRequest = PreferenceRequest.builder()
-                .items(items).build();
+                .externalReference(externalReference)
+                .items(List.of(itemRequest))
+                .build();
+
+        carritoDAO.actualizarExternalReferenceMp(carrito.getId(), externalReference);
+
+        if (carrito.getEnvioId() == null) {
+            Integer envioId = envioService.crearEnvio(
+                    comprarCarritoDto.getCodigoPostal(),
+                    comprarCarritoDto.getProvincia(),
+                    comprarCarritoDto.getLocalidad(),
+                    comprarCarritoDto.getDireccion(),
+                    comprarCarritoDto.getNumero(),
+                    comprarCarritoDto.getDescripcion()
+            ).getId();
+
+            carritoDAO.actualizarEnvioId(carrito.getId(), envioId);
+        }
+
         PreferenceClient client = new PreferenceClient();
         
         try {
             Preference preference = client.create(preferenceRequest);
+            return "https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=" + preference.getId();
         } catch (MPException | MPApiException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al crear la preferencia de pago", e);
         }

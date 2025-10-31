@@ -33,11 +33,11 @@ public class CarritoController {
     @PostMapping("/comprar")
     public ResponseEntity<Map<String, String>> comprarCarrito(@RequestBody ComprarCarritoDto request) {
         try {
-            carritoService.comprarCarrito(request);
+            String linkMercadoPago = carritoService.comprarCarrito(request);
+
+            return ResponseEntity.status(HttpStatus.OK).body(Map.of("link", linkMercadoPago));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getReason()));
         }
-
-        return ResponseEntity.status(HttpStatus.OK).body(Map.of("status", "Compra realizada con éxito"));
     }
 }

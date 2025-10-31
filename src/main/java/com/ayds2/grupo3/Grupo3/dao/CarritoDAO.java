@@ -68,7 +68,7 @@ public class CarritoDAO {
                     .executeUpdate()
                     .getKey();
             int id = ((Number) key).intValue();
-            return new Carrito(id, clienteId, null);
+            return new Carrito(id, clienteId, null, null, null);
         }
     }
 
@@ -95,6 +95,26 @@ public class CarritoDAO {
                     .addParameter("carritoId", carritoId)
                     .executeAndFetchFirst(Double.class);
             return total != null ? total : 0.0;
+        }
+    }
+
+    public void actualizarExternalReferenceMp(int carritoId, String externalReferenceMp) {
+        String sql = "UPDATE carritos SET externalReferenceMp = :externalReferenceMp WHERE id = :carritoId;";
+        try (Connection con = Sql2oDAO.getSql2o().open()) {
+            con.createQuery(sql)
+                    .addParameter("externalReferenceMp", externalReferenceMp)
+                    .addParameter("carritoId", carritoId)
+                    .executeUpdate();
+        }
+    }
+
+    public void actualizarEnvioId(int carritoId, int envioId) {
+        String sql = "UPDATE carritos SET envioId = :envioId WHERE id = :carritoId;";
+        try (Connection con = Sql2oDAO.getSql2o().open()) {
+            con.createQuery(sql)
+                    .addParameter("envioId", envioId)
+                    .addParameter("carritoId", carritoId)
+                    .executeUpdate();
         }
     }
 }
