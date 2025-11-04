@@ -28,4 +28,8 @@ public class EnvioService {
         
         return envio;
     }
+
+    public Envio getEnvioPorId(int envioId) {
+        return envioDAO.getEnvioPorId(envioId);
+    }
 }

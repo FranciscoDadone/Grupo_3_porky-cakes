@@ -12,4 +12,5 @@ public class Carrito {
     private Timestamp fechaCompra;
     private Integer envioId;
     private String externalReferenceMp;
+    private String preferenceIdMp;
 }

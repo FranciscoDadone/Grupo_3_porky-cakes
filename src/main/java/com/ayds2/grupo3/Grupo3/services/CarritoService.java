@@ -3,19 +3,31 @@ package com.ayds2.grupo3.Grupo3.services;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import com.ayds2.grupo3.Grupo3.dao.CarritoDAO;
 import com.ayds2.grupo3.Grupo3.dao.ClienteDAO;
 import com.ayds2.grupo3.Grupo3.dao.ProductoDAO;
 import com.ayds2.grupo3.Grupo3.dto.ComprarCarritoDto;
+import com.ayds2.grupo3.Grupo3.enums.EstadoPago;
 import com.ayds2.grupo3.Grupo3.models.Carrito;
 import com.ayds2.grupo3.Grupo3.models.Cliente;
 import com.ayds2.grupo3.Grupo3.models.Producto;
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.RequiredArgsConstructor;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceItemRequest;
 import com.mercadopago.client.preference.PreferenceRequest;
@@ -25,13 +37,18 @@ import com.mercadopago.exceptions.MPApiException;
 
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 
 public class CarritoService {
     private final CarritoDAO carritoDAO;
     private final ClienteDAO clienteDAO;
     private final ProductoDAO productoDAO;
     private final EnvioService envioService;
+    private final ObjectMapper objectMapper;
+
+    @Value("${mercadopago.access.token}")
+    private String accessToken;
+
 
     public void agregarProducto(int productoId, int cantidad, int clienteId) {
         Cliente cliente = clienteDAO.getPorId(clienteId);
@@ -64,6 +81,15 @@ public class CarritoService {
         if (carrito == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "El carrito con ID " + comprarCarritoDto.getCarritoId() + " no existe");
+        }
+
+        if (carrito.getFechaCompra() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El carrito con ID " + comprarCarritoDto.getCarritoId() + " ya fue comprado");
+        }
+
+        if (carrito.getPreferenceIdMp() != null) {
+            return "https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=" + carrito.getPreferenceIdMp();
         }
 
         if (comprarCarritoDto.getCodigoPostal() == null || comprarCarritoDto.getProvincia() == null ||
@@ -115,9 +141,68 @@ public class CarritoService {
         
         try {
             Preference preference = client.create(preferenceRequest);
+            carritoDAO.actualizarPreferenceMp(carrito.getId(), preference.getId());
             return "https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=" + preference.getId();
         } catch (MPException | MPApiException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al crear la preferencia de pago", e);
+        }
+
+    }
+
+    public Carrito getCarritoPorId(int carritoId) {
+        Carrito carrito = carritoDAO.getCarritoPorId(carritoId);
+        if (carrito == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Carrito no encontrado");
+        }
+        return carrito;
+    }
+
+    public EstadoPago estadoPago(Carrito carrito) throws IOException, InterruptedException {
+    
+        HttpClient client = HttpClient.newHttpClient();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.mercadopago.com/v1/payments/search?external_reference=" + carrito.getExternalReferenceMp()))
+                .timeout(Duration.ofSeconds(10))
+                .header("Accept", "application/json")
+                .header("Authorization", "Bearer " + accessToken)
+                .GET()
+                .build();
+
+        HttpResponse<String> response = client.send(request,
+                HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            Map<String, Object> jsonMap = objectMapper.readValue(response.body(),
+                    new TypeReference<Map<String, Object>>() {
+                    });
+
+            List<?> results = (List<?>) jsonMap.get("results");
+            
+            if (results == null || results.isEmpty()) {
+                return EstadoPago.PENDIENTE;
+            }
+            
+            Object firstResult = results.get(0);
+            if (!(firstResult instanceof Map)) {
+                throw new RuntimeException("Formato de respuesta inesperado de MercadoPago");
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> payment = (Map<String, Object>) firstResult;
+            String status = (String) payment.get("status");
+            
+            if ("approved".equals(status) && carrito.getFechaCompra() == null) {
+                carritoDAO.marcarCarritoComoComprado(carrito.getId());
+            }
+
+            if ("approved".equals(status)) {
+                return EstadoPago.COMPLETADO;
+            }
+            
+            return EstadoPago.CANCELADO;
+
+        } else {
+            throw new RuntimeException("Error en la petición HTTP: " + response.statusCode());
         }
 
     }

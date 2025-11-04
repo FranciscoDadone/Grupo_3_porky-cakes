@@ -68,7 +68,7 @@ public class CarritoDAO {
                     .executeUpdate()
                     .getKey();
             int id = ((Number) key).intValue();
-            return new Carrito(id, clienteId, null, null, null);
+            return new Carrito(id, clienteId, null, null, null, null);
         }
     }
 
@@ -113,6 +113,25 @@ public class CarritoDAO {
         try (Connection con = Sql2oDAO.getSql2o().open()) {
             con.createQuery(sql)
                     .addParameter("envioId", envioId)
+                    .addParameter("carritoId", carritoId)
+                    .executeUpdate();
+        }
+    }
+
+    public void marcarCarritoComoComprado(int carritoId) {
+        String sql = "UPDATE carritos SET fechaCompra = NOW() WHERE id = :carritoId;";
+        try (Connection con = Sql2oDAO.getSql2o().open()) {
+            con.createQuery(sql)
+                    .addParameter("carritoId", carritoId)
+                    .executeUpdate();
+        }
+    }
+
+    public void actualizarPreferenceMp(int carritoId, String preferenceIdMp) {  
+        String sql = "UPDATE carritos SET preferenceIdMp = :preferenceIdMp WHERE id = :carritoId;";
+        try (Connection con = Sql2oDAO.getSql2o().open()) {
+            con.createQuery(sql)
+                    .addParameter("preferenceIdMp", preferenceIdMp)
                     .addParameter("carritoId", carritoId)
                     .executeUpdate();
         }
