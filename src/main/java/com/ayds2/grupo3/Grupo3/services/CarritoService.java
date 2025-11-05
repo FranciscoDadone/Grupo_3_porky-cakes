@@ -14,8 +14,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+
+import com.ayds2.grupo3.Grupo3.controllers.CarritoController;
 import com.ayds2.grupo3.Grupo3.dao.CarritoDAO;
 import com.ayds2.grupo3.Grupo3.dao.ClienteDAO;
 import com.ayds2.grupo3.Grupo3.dao.ProductoDAO;
@@ -45,6 +49,7 @@ public class CarritoService {
     private final ProductoDAO productoDAO;
     private final EnvioService envioService;
     private final ObjectMapper objectMapper;
+    private static final Logger logger = LoggerFactory.getLogger(CarritoService.class);
 
     @Value("${mercadopago.access.token}")
     private String accessToken;
@@ -117,6 +122,8 @@ public class CarritoService {
 
         String externalReference = "PORKYS-" + System.currentTimeMillis() + "-" + String.valueOf(carrito.getId());
 
+        logger.info("Generando preferencia de pago con referencia: {}", externalReference);
+
         PreferenceRequest preferenceRequest = PreferenceRequest.builder()
                 .externalReference(externalReference)
                 .items(List.of(itemRequest))
@@ -142,8 +149,10 @@ public class CarritoService {
         try {
             Preference preference = client.create(preferenceRequest);
             carritoDAO.actualizarPreferenceMp(carrito.getId(), preference.getId());
+            logger.info("Preferencia de pago creada con ID: {}", preference.getId());
             return "https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=" + preference.getId();
         } catch (MPException | MPApiException e) {
+            logger.error("Error al crear la preferencia de pago: {}", e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al crear la preferencia de pago", e);
         }
 
@@ -161,6 +170,7 @@ public class CarritoService {
     
         HttpClient client = HttpClient.newHttpClient();
 
+        logger.info("Obteniendo estado del pago con referencia: {}", carrito.getExternalReferenceMp());
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://api.mercadopago.com/v1/payments/search?external_reference=" + carrito.getExternalReferenceMp()))
                 .timeout(Duration.ofSeconds(10))
@@ -171,6 +181,8 @@ public class CarritoService {
 
         HttpResponse<String> response = client.send(request,
                 HttpResponse.BodyHandlers.ofString());
+
+        logger.info("Respuesta de MercadoPago: {}", response.body());
 
         if (response.statusCode() == 200) {
             Map<String, Object> jsonMap = objectMapper.readValue(response.body(),
