@@ -167,7 +167,14 @@ public class CarritoService {
     }
 
     public EstadoPago estadoPago(Carrito carrito) throws IOException, InterruptedException {
-    
+        if (carrito.getEstadoPago() == EstadoPago.COMPLETADO) {
+            return EstadoPago.COMPLETADO;
+        }
+
+        if (carrito.getExternalReferenceMp() == null) {
+            return EstadoPago.PENDIENTE;
+        }
+
         HttpClient client = HttpClient.newHttpClient();
 
         logger.info("Obteniendo estado del pago con referencia: {}", carrito.getExternalReferenceMp());
@@ -192,6 +199,7 @@ public class CarritoService {
             List<?> results = (List<?>) jsonMap.get("results");
             
             if (results == null || results.isEmpty()) {
+                carritoDAO.actualizarEstadoPago(carrito.getId(), EstadoPago.PENDIENTE);
                 return EstadoPago.PENDIENTE;
             }
             
@@ -204,13 +212,12 @@ public class CarritoService {
             String status = (String) payment.get("status");
             
             if ("approved".equals(status) && carrito.getFechaCompra() == null) {
-                carritoDAO.marcarCarritoComoComprado(carrito.getId());
-            }
-
-            if ("approved".equals(status)) {
+                carritoDAO.actualizarEstadoPago(carrito.getId(), EstadoPago.COMPLETADO);
+                carritoDAO.actualizarFechaCompra(carrito.getId());
                 return EstadoPago.COMPLETADO;
             }
-            
+
+            carritoDAO.actualizarEstadoPago(carrito.getId(), EstadoPago.CANCELADO);
             return EstadoPago.CANCELADO;
 
         } else {

@@ -2,6 +2,8 @@ package com.ayds2.grupo3.Grupo3.dao;
 
 import org.springframework.stereotype.Repository;
 import org.sql2o.Connection;
+
+import com.ayds2.grupo3.Grupo3.enums.EstadoPago;
 import com.ayds2.grupo3.Grupo3.models.Carrito;
 import com.ayds2.grupo3.Grupo3.models.Producto;
 import com.ayds2.grupo3.Grupo3.util.Sql2oDAO;
@@ -61,14 +63,14 @@ public class CarritoDAO {
     }
 
     public Carrito crearCarrito(int clienteId) {
-        String sql = "INSERT INTO carritos (clienteId, fechaCompra) VALUES (:clienteId, NULL);";
+        String sql = "INSERT INTO carritos (clienteId, fechaCompra, estadoPago) VALUES (:clienteId, NULL, 'PENDIENTE');";
         try (Connection con = Sql2oDAO.getSql2o().open()) {
             Object key = con.createQuery(sql, true)
                     .addParameter("clienteId", clienteId)
                     .executeUpdate()
                     .getKey();
             int id = ((Number) key).intValue();
-            return new Carrito(id, clienteId, null, null, null, null);
+            return new Carrito(id, clienteId, null, null, null, null, EstadoPago.PENDIENTE);
         }
     }
 
@@ -118,10 +120,11 @@ public class CarritoDAO {
         }
     }
 
-    public void marcarCarritoComoComprado(int carritoId) {
-        String sql = "UPDATE carritos SET fechaCompra = NOW() WHERE id = :carritoId;";
+    public void actualizarEstadoPago(int carritoId, EstadoPago estadoPago) {
+        String sql = "UPDATE carritos SET estadoPago = :estadoPago WHERE id = :carritoId;";
         try (Connection con = Sql2oDAO.getSql2o().open()) {
             con.createQuery(sql)
+                    .addParameter("estadoPago", estadoPago)
                     .addParameter("carritoId", carritoId)
                     .executeUpdate();
         }
@@ -132,6 +135,15 @@ public class CarritoDAO {
         try (Connection con = Sql2oDAO.getSql2o().open()) {
             con.createQuery(sql)
                     .addParameter("preferenceIdMp", preferenceIdMp)
+                    .addParameter("carritoId", carritoId)
+                    .executeUpdate();
+        }
+    }
+
+    public void actualizarFechaCompra(int carritoId) {
+        String sql = "UPDATE carritos SET fechaCompra = NOW() WHERE id = :carritoId;";
+        try (Connection con = Sql2oDAO.getSql2o().open()) {
+            con.createQuery(sql)
                     .addParameter("carritoId", carritoId)
                     .executeUpdate();
         }

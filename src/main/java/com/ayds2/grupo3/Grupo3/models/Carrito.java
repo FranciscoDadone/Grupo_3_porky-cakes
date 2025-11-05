@@ -1,6 +1,9 @@
 package com.ayds2.grupo3.Grupo3.models;
 
 import java.sql.Timestamp;
+
+import com.ayds2.grupo3.Grupo3.enums.EstadoPago;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -13,4 +16,5 @@ public class Carrito {
     private Integer envioId;
     private String externalReferenceMp;
     private String preferenceIdMp;
+    private EstadoPago estadoPago;
 }

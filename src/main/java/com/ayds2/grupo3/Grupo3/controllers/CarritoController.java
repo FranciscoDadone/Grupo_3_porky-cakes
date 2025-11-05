@@ -63,12 +63,18 @@ public class CarritoController {
         try {
             Carrito carrito = carritoService.getCarritoPorId(id);
             EstadoPago estado = carritoService.estadoPago(carrito);
-            Envio envio = envioService.getEnvioPorId(carrito.getEnvioId());
-            return ResponseEntity.ok(Map.of("carrito", carrito, "estado", estado, "envio", envio));
+            Envio envio = carrito.getEnvioId() != null ? envioService.getEnvioPorId(carrito.getEnvioId()) : null;
+            
+            if (envio != null) {
+                return ResponseEntity.ok(Map.of("carrito", carrito, "estado", estado, "envio", envio));
+            } else {
+                return ResponseEntity.ok(Map.of("carrito", carrito, "estado", estado));
+            }
+            
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getReason()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Error al obtener el estado del carrito", "stack", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
         }
     }
     
