@@ -15,4 +15,14 @@ public class ProductoDAO {
                     .executeAndFetchFirst(Producto.class);
         }
     }
+
+    public void actualizarStock(int productoId, int nuevoStock) {
+        String sql = "UPDATE productos SET stock = :stock WHERE id = :id;";
+        try (Connection con = Sql2oDAO.getSql2o().open()) {
+            con.createQuery(sql)
+                    .addParameter("id", productoId)
+                    .addParameter("stock", nuevoStock)
+                    .executeUpdate();
+        }
+    }
 }

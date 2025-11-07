@@ -3,9 +3,9 @@ package com.ayds2.grupo3.Grupo3.dao;
 import org.springframework.stereotype.Repository;
 import org.sql2o.Connection;
 
+import com.ayds2.grupo3.Grupo3.dto.ProductoCarritoDto;
 import com.ayds2.grupo3.Grupo3.enums.EstadoPago;
 import com.ayds2.grupo3.Grupo3.models.Carrito;
-import com.ayds2.grupo3.Grupo3.models.Producto;
 import com.ayds2.grupo3.Grupo3.util.Sql2oDAO;
 
 @Repository
@@ -25,16 +25,16 @@ public class CarritoDAO extends CrudDAO<Carrito> {
         return "carritos";
     }
 
-    // public void insertarProducto(int carritoId, int productoId, int cantidad) {
-    //     String sql = "INSERT INTO productos_x_carrito (productoId, carritoId, cantidad) VALUES (:productoId, :carritoId, :cantidad);";
-    //     try (Connection con = Sql2oDAO.getSql2o().open()) {
-    //         con.createQuery(sql)
-    //                 .addParameter("productoId", productoId)
-    //                 .addParameter("carritoId", carritoId)
-    //                 .addParameter("cantidad", cantidad)
-    //                 .executeUpdate();
-    //     }
-    // }
+    public void insertarProducto(int carritoId, int productoId, int cantidad) {
+        String sql = "INSERT INTO productos_x_carrito (productoId, carritoId, cantidad) VALUES (:productoId, :carritoId, :cantidad);";
+        try (Connection con = Sql2oDAO.getSql2o().open()) {
+            con.createQuery(sql)
+                    .addParameter("productoId", productoId)
+                    .addParameter("carritoId", carritoId)
+                    .addParameter("cantidad", cantidad)
+                    .executeUpdate();
+        }
+    }
 
     public void actualizarCantidadProducto(int carritoId, int productoId, int cantidad) {
         String sql = "UPDATE productos_x_carrito SET cantidad = :cantidad WHERE productoId = :productoId AND carritoId = :carritoId;";
@@ -67,15 +67,6 @@ public class CarritoDAO extends CrudDAO<Carrito> {
         }
     }
 
-    public Carrito getCarritoPorId(int carritoId) {
-        String sql = "SELECT * FROM carritos WHERE id = :carritoId;";
-        try (Connection con = Sql2oDAO.getSql2o().open()) {
-            return con.createQuery(sql)
-                    .addParameter("carritoId", carritoId)
-                    .executeAndFetchFirst(Carrito.class);
-        }
-    }
-
     public Carrito crearCarrito(int clienteId) {
         String sql = "INSERT INTO carritos (clienteId, fechaCompra, estadoPago) VALUES (:clienteId, NULL, 'PENDIENTE');";
         try (Connection con = Sql2oDAO.getSql2o().open()) {
@@ -88,16 +79,16 @@ public class CarritoDAO extends CrudDAO<Carrito> {
         }
     }
 
-    public Producto[] getProductosDelCarrito(int carritoId) {
-        String sql = "SELECT p.id, p.nombre, p.descripcion, p.precio, p.stock " +
+    public ProductoCarritoDto[] getProductosDelCarrito(int carritoId) {
+        String sql = "SELECT p.id, p.nombre, p.precio, p.stock, pc.cantidad " +
                      "FROM productos p " +
                      "JOIN productos_x_carrito pc ON p.id = pc.productoId " +
                      "WHERE pc.carritoId = :carritoId;";
         try (Connection con = Sql2oDAO.getSql2o().open()) {
             return con.createQuery(sql)
                     .addParameter("carritoId", carritoId)
-                    .executeAndFetch(Producto.class)
-                    .toArray(new Producto[0]);
+                    .executeAndFetch(ProductoCarritoDto.class)
+                    .toArray(new ProductoCarritoDto[0]);
         }
     }
 
@@ -115,42 +106,34 @@ public class CarritoDAO extends CrudDAO<Carrito> {
     }
 
     public void actualizarExternalReferenceMp(int carritoId, String externalReferenceMp) {
-        String sql = "UPDATE carritos SET externalReferenceMp = :externalReferenceMp WHERE id = :carritoId;";
-        try (Connection con = Sql2oDAO.getSql2o().open()) {
-            con.createQuery(sql)
-                    .addParameter("externalReferenceMp", externalReferenceMp)
-                    .addParameter("carritoId", carritoId)
-                    .executeUpdate();
+        Carrito carrito = select(carritoId);
+        if (carrito != null) {
+            carrito.setExternalReferenceMp(externalReferenceMp);
+            update(carrito);
         }
     }
 
     public void actualizarEnvioId(int carritoId, int envioId) {
-        String sql = "UPDATE carritos SET envioId = :envioId WHERE id = :carritoId;";
-        try (Connection con = Sql2oDAO.getSql2o().open()) {
-            con.createQuery(sql)
-                    .addParameter("envioId", envioId)
-                    .addParameter("carritoId", carritoId)
-                    .executeUpdate();
+        Carrito carrito = select(carritoId);
+        if (carrito != null) {
+            carrito.setEnvioId(envioId);
+            update(carrito);
         }
     }
 
     public void actualizarEstadoPago(int carritoId, EstadoPago estadoPago) {
-        String sql = "UPDATE carritos SET estadoPago = :estadoPago WHERE id = :carritoId;";
-        try (Connection con = Sql2oDAO.getSql2o().open()) {
-            con.createQuery(sql)
-                    .addParameter("estadoPago", estadoPago)
-                    .addParameter("carritoId", carritoId)
-                    .executeUpdate();
+        Carrito carrito = select(carritoId);
+        if (carrito != null) {
+            carrito.setEstadoPago(estadoPago);
+            update(carrito);
         }
     }
 
-    public void actualizarPreferenceMp(int carritoId, String preferenceIdMp) {  
-        String sql = "UPDATE carritos SET preferenceIdMp = :preferenceIdMp WHERE id = :carritoId;";
-        try (Connection con = Sql2oDAO.getSql2o().open()) {
-            con.createQuery(sql)
-                    .addParameter("preferenceIdMp", preferenceIdMp)
-                    .addParameter("carritoId", carritoId)
-                    .executeUpdate();
+    public void actualizarPreferenceMp(int carritoId, String preferenceIdMp) {
+        Carrito carrito = select(carritoId);
+        if (carrito != null) {
+            carrito.setPreferenceIdMp(preferenceIdMp);
+            update(carrito);
         }
     }
 

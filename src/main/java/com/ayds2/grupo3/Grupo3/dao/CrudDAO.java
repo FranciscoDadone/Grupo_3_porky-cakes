@@ -23,7 +23,7 @@ public abstract class CrudDAO<T> {
     abstract public String getTableName();
 
     public BigInteger insert(T t) {
-        Class cls = t.getClass();
+        Class<?> cls = t.getClass();
         Field[] fields = cls.getDeclaredFields();
 
         String str1 = "";
@@ -38,8 +38,6 @@ public abstract class CrudDAO<T> {
         str2 = str2.substring(0, str2.length() - 1);
 
         String sql = "INSERT INTO " + getTableName() + " (" + str1 + ") VALUES (" + str2 + ");";
-
-        System.out.println(sql);
 
         try (Connection con = Sql2oDAO.getSql2o().open()) {
             Query query = con.createQuery(sql);
@@ -63,6 +61,37 @@ public abstract class CrudDAO<T> {
             return con.createQuery(sql)
                     .addParameter("id", id)
                     .executeAndFetchFirst(getTClass());
+        }
+    }
+
+    public void update(T t) {
+        Class<?> cls = t.getClass();
+        Field[] fields = cls.getDeclaredFields();
+
+        String setClause = "";
+        for (Field field : fields) {
+            String name = field.getName();
+            if (!name.equals(getTablePK())) {
+                setClause += name + " = :" + name + ",";
+            }
+        }
+
+        setClause = setClause.substring(0, setClause.length() - 1);
+
+        String sql = "UPDATE " + getTableName() + " SET " + setClause + " WHERE " + getTablePK() + " = :" + getTablePK() + ";";
+
+        try (Connection con = Sql2oDAO.getSql2o().open()) {
+            Query query = con.createQuery(sql);
+            for (Field field : fields) {
+                field.setAccessible(true);
+                try {
+                    Object value = field.get(t);
+                    query.addParameter(field.getName(), value);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+            query.executeUpdate();
         }
     }
 

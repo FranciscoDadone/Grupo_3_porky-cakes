@@ -24,6 +24,7 @@ import com.ayds2.grupo3.Grupo3.dao.CarritoDAO;
 import com.ayds2.grupo3.Grupo3.dao.ClienteDAO;
 import com.ayds2.grupo3.Grupo3.dao.ProductoDAO;
 import com.ayds2.grupo3.Grupo3.dto.ComprarCarritoDto;
+import com.ayds2.grupo3.Grupo3.dto.ProductoCarritoDto;
 import com.ayds2.grupo3.Grupo3.enums.EstadoPago;
 import com.ayds2.grupo3.Grupo3.models.Carrito;
 import com.ayds2.grupo3.Grupo3.models.Cliente;
@@ -82,7 +83,7 @@ public class CarritoService {
     }
 
     public String comprarCarrito(ComprarCarritoDto comprarCarritoDto) {
-        Carrito carrito = carritoDAO.getCarritoPorId(comprarCarritoDto.getCarritoId());
+        Carrito carrito = carritoDAO.select(comprarCarritoDto.getCarritoId());
         if (carrito == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "El carrito con ID " + comprarCarritoDto.getCarritoId() + " no existe");
@@ -104,14 +105,23 @@ public class CarritoService {
                     "Faltan datos de envío obligatorios");
         }
 
-        Producto[] productosCarrito = carritoDAO.getProductosDelCarrito(carrito.getId());
+        ProductoCarritoDto[] productosCarrito = carritoDAO.getProductosDelCarrito(carrito.getId());
 
         String descripcion = "";
-        for (Producto producto : productosCarrito) {
+        for (ProductoCarritoDto producto : productosCarrito) {
+            if (producto.getStock() <= 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "El producto " + producto.getNombre() + " no tiene stock disponible");
+            }
+            
+            Producto productoActualizar = productoDAO.getPorId(producto.getId());
+            int nuevoStock = productoActualizar.getStock() - producto.getCantidad();
+            productoDAO.actualizarStock(producto.getId(), nuevoStock);
+            
             descripcion += producto.getNombre() + ", ";
         }
 
-        double total = carritoDAO.calcularTotalCarrito(carrito.getId());
+        descripcion = descripcion.substring(0, descripcion.length() - 1);        double total = carritoDAO.calcularTotalCarrito(carrito.getId());
 
         PreferenceItemRequest itemRequest = PreferenceItemRequest.builder()
                 .title(descripcion)
@@ -159,7 +169,7 @@ public class CarritoService {
     }
 
     public Carrito getCarritoPorId(int carritoId) {
-        Carrito carrito = carritoDAO.getCarritoPorId(carritoId);
+        Carrito carrito = carritoDAO.select(carritoId);
         if (carrito == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Carrito no encontrado");
         }
