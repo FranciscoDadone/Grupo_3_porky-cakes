@@ -1,10 +1,8 @@
 package com.ayds2.grupo3.Grupo3.services;
 
 import org.springframework.stereotype.Service;
-
 import com.ayds2.grupo3.Grupo3.dao.EnvioDAO;
 import com.ayds2.grupo3.Grupo3.models.Envio;
-
 import lombok.AllArgsConstructor;
 
 @Service
@@ -24,12 +22,14 @@ public class EnvioService {
         envio.setDescripcion(descripcion);
         envio.setEstado("CREADO");
 
-        envio = envioDAO.guardarEnvio(envio);
+        int id = envioDAO.insert(envio).intValue();
         
+        envio.setId(id);
+
         return envio;
     }
 
     public Envio getEnvioPorId(int envioId) {
-        return envioDAO.getEnvioPorId(envioId);
+        return envioDAO.select(envioId);
     }
 }

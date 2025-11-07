@@ -9,18 +9,32 @@ import com.ayds2.grupo3.Grupo3.models.Producto;
 import com.ayds2.grupo3.Grupo3.util.Sql2oDAO;
 
 @Repository
-public class CarritoDAO {
-
-    public void insertarProducto(int carritoId, int productoId, int cantidad) {
-        String sql = "INSERT INTO productos_x_carrito (productoId, carritoId, cantidad) VALUES (:productoId, :carritoId, :cantidad);";
-        try (Connection con = Sql2oDAO.getSql2o().open()) {
-            con.createQuery(sql)
-                    .addParameter("productoId", productoId)
-                    .addParameter("carritoId", carritoId)
-                    .addParameter("cantidad", cantidad)
-                    .executeUpdate();
-        }
+public class CarritoDAO extends CrudDAO<Carrito> {
+    @Override
+    public Class<Carrito> getTClass() {
+        return Carrito.class;
     }
+
+    @Override
+    public String getTablePK() {
+        return "id";
+    }
+
+    @Override
+    public String getTableName() {
+        return "carritos";
+    }
+
+    // public void insertarProducto(int carritoId, int productoId, int cantidad) {
+    //     String sql = "INSERT INTO productos_x_carrito (productoId, carritoId, cantidad) VALUES (:productoId, :carritoId, :cantidad);";
+    //     try (Connection con = Sql2oDAO.getSql2o().open()) {
+    //         con.createQuery(sql)
+    //                 .addParameter("productoId", productoId)
+    //                 .addParameter("carritoId", carritoId)
+    //                 .addParameter("cantidad", cantidad)
+    //                 .executeUpdate();
+    //     }
+    // }
 
     public void actualizarCantidadProducto(int carritoId, int productoId, int cantidad) {
         String sql = "UPDATE productos_x_carrito SET cantidad = :cantidad WHERE productoId = :productoId AND carritoId = :carritoId;";
