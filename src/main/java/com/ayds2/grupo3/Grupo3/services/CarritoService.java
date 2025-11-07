@@ -13,12 +13,10 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-
 import com.ayds2.grupo3.Grupo3.controllers.CarritoController;
 import com.ayds2.grupo3.Grupo3.dao.CarritoDAO;
 import com.ayds2.grupo3.Grupo3.dao.ClienteDAO;
@@ -31,7 +29,6 @@ import com.ayds2.grupo3.Grupo3.models.Cliente;
 import com.ayds2.grupo3.Grupo3.models.Producto;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.RequiredArgsConstructor;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceItemRequest;
@@ -39,7 +36,6 @@ import com.mercadopago.client.preference.PreferenceRequest;
 import com.mercadopago.resources.preference.Preference;
 import com.mercadopago.exceptions.MPException;
 import com.mercadopago.exceptions.MPApiException;
-
 
 @Service
 @RequiredArgsConstructor
@@ -121,7 +117,8 @@ public class CarritoService {
             descripcion += producto.getNombre() + ", ";
         }
 
-        descripcion = descripcion.substring(0, descripcion.length() - 1);        double total = carritoDAO.calcularTotalCarrito(carrito.getId());
+        descripcion = descripcion.substring(0, descripcion.length() - 1);
+        double total = carritoDAO.calcularTotalCarrito(carrito.getId());
 
         PreferenceItemRequest itemRequest = PreferenceItemRequest.builder()
                 .title(descripcion)
@@ -161,7 +158,7 @@ public class CarritoService {
             carritoDAO.actualizarPreferenceMp(carrito.getId(), preference.getId());
             logger.info("Preferencia de pago creada con ID: {}", preference.getId());
             return "https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=" + preference.getId();
-        } catch (MPException | MPApiException e) {
+        } catch (Exception e) {
             logger.error("Error al crear la preferencia de pago: {}", e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al crear la preferencia de pago", e);
         }
